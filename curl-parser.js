@@ -2,47 +2,43 @@
  * Created by elgs on 1/28/16.
  */
 
-var t = 'curl -s -0 -X GET \
--H "token: <token>" \
--H "app_id: 5f04e621b1374fde81beb5d16b5c9160" \
-"https://sg000.netdata.io:2015/api/server"';
+var t = 'curl -u "demo" -X POST -d @file1.txt -d @file2.txt https://example.com/upload';
 
 
-var result = curlToGo(t);
-//console.log(result);
+parse_curl(t);
 
 
-function curlToGo(curl) {
-    // List of curl flags that are boolean typed; this helps with parsing
-    // a command like `curl -abc value` to know whether 'value' belongs to '-c'
-    // or is just a positional argument instead.
-    var boolOptions = ['#', 'progress-bar', '-', 'next', '0', 'http1.0', 'http1.1', 'http2',
-        'no-npn', 'no-alpn', '1', 'tlsv1', '2', 'sslv2', '3', 'sslv3', '4', 'ipv4', '6', 'ipv6',
-        'a', 'append', 'anyauth', 'B', 'use-ascii', 'basic', 'compressed', 'create-dirs',
-        'crlf', 'digest', 'disable-eprt', 'disable-epsv', 'environment', 'cert-status',
-        'false-start', 'f', 'fail', 'ftp-create-dirs', 'ftp-pasv', 'ftp-skip-pasv-ip',
-        'ftp-pret', 'ftp-ssl-ccc', 'ftp-ssl-control', 'g', 'globoff', 'G', 'get',
-        'ignore-content-length', 'i', 'include', 'I', 'head', 'j', 'junk-session-cookies',
-        'J', 'remote-header-name', 'k', 'insecure', 'l', 'list-only', 'L', 'location',
-        'location-trusted', 'metalink', 'n', 'netrc', 'N', 'no-buffer', 'netrc-file',
-        'netrc-optional', 'negotiate', 'no-keepalive', 'no-sessionid', 'ntlm', 'O',
-        'remote-name', 'oauth2-bearer', 'p', 'proxy-tunnel', 'path-as-is', 'post301', 'post302',
-        'post303', 'proxy-anyauth', 'proxy-basic', 'proxy-digest', 'proxy-negotiate',
-        'proxy-ntlm', 'q', 'raw', 'remote-name-all', 's', 'silent', 'sasl-ir', 'S', 'show-error',
-        'ssl', 'ssl-reqd', 'ssl-allow-beast', 'ssl-no-revoke', 'socks5-gssapi-nec', 'tcp-nodelay',
-        'tlsv1.0', 'tlsv1.1', 'tlsv1.2', 'tr-encoding', 'trace-time', 'v', 'verbose', 'xattr',
-        'h', 'help', 'M', 'manual', 'V', 'version'];
+// List of curl flags that are boolean typed; this helps with parsing
+// a command like `curl -abc value` to know whether 'value' belongs to '-c'
+// or is just a positional argument instead.
+var boolOptions = ['#', 'progress-bar', '-', 'next', '0', 'http1.0', 'http1.1', 'http2',
+    'no-npn', 'no-alpn', '1', 'tlsv1', '2', 'sslv2', '3', 'sslv3', '4', 'ipv4', '6', 'ipv6',
+    'a', 'append', 'anyauth', 'B', 'use-ascii', 'basic', 'compressed', 'create-dirs',
+    'crlf', 'digest', 'disable-eprt', 'disable-epsv', 'environment', 'cert-status',
+    'false-start', 'f', 'fail', 'ftp-create-dirs', 'ftp-pasv', 'ftp-skip-pasv-ip',
+    'ftp-pret', 'ftp-ssl-ccc', 'ftp-ssl-control', 'g', 'globoff', 'G', 'get',
+    'ignore-content-length', 'i', 'include', 'I', 'head', 'j', 'junk-session-cookies',
+    'J', 'remote-header-name', 'k', 'insecure', 'l', 'list-only', 'L', 'location',
+    'location-trusted', 'metalink', 'n', 'netrc', 'N', 'no-buffer', 'netrc-file',
+    'netrc-optional', 'negotiate', 'no-keepalive', 'no-sessionid', 'ntlm', 'O',
+    'remote-name', 'oauth2-bearer', 'p', 'proxy-tunnel', 'path-as-is', 'post301', 'post302',
+    'post303', 'proxy-anyauth', 'proxy-basic', 'proxy-digest', 'proxy-negotiate',
+    'proxy-ntlm', 'q', 'raw', 'remote-name-all', 's', 'silent', 'sasl-ir', 'S', 'show-error',
+    'ssl', 'ssl-reqd', 'ssl-allow-beast', 'ssl-no-revoke', 'socks5-gssapi-nec', 'tcp-nodelay',
+    'tlsv1.0', 'tlsv1.1', 'tlsv1.2', 'tr-encoding', 'trace-time', 'v', 'verbose', 'xattr',
+    'h', 'help', 'M', 'manual', 'V', 'version'];
 
+function parse_curl(curl) {
     if (!curl.trim()) {
         return;
     }
-    var cmd = parseCommand(curl, {boolFlags: boolOptions});
+    var cmd = parse(curl, {boolFlags: boolOptions});
     console.log(cmd);
 
     if (cmd._[0] != "curl")
         throw "Not a curl command";
 
-    var req = extractRelevantPieces(cmd);
+    var req = extract(cmd);
     console.log(req);
 }
 
@@ -50,7 +46,7 @@ function curlToGo(curl) {
 // extracted from cmd, the parsed command. This accounts for
 // multiple flags that do the same thing and return structured
 // data that makes it easy to spit out Go code.
-function extractRelevantPieces(cmd) {
+function extract(cmd) {
     var relevant = {
         url: "",
         method: "",
@@ -59,53 +55,67 @@ function extractRelevantPieces(cmd) {
     };
 
     // curl supports multiple URLs but we'll just use the first
-    if (cmd._.length > 1)
+    if (cmd._.length > 1) {
         relevant.url = cmd._[1]; // position 1 because index 0 is the curl command itself
+    }
 
     // gather the headers together
-    if (cmd.H)
+    if (cmd.H) {
         relevant.headers = relevant.headers.concat(cmd.H);
-    if (cmd.header)
+    }
+    if (cmd.header) {
         relevant.headers = relevant.headers.concat(cmd.header);
+    }
 
     // set method to HEAD?
-    if (cmd.I || cmd.head)
+    if (cmd.I || cmd.head) {
         relevant.method = "HEAD";
+    }
 
     // between -X and --request, prefer the long form I guess
-    if (cmd.request && cmd.request.length > 0)
+    if (cmd.request && cmd.request.length > 0) {
         relevant.method = cmd.request[cmd.request.length - 1].toUpperCase();
-    else if (cmd.X && cmd.X.length > 0)
+    }
+    else if (cmd.X && cmd.X.length > 0) {
         relevant.method = cmd.X[cmd.X.length - 1].toUpperCase(); // if multiple, use last (according to curl docs)
+    }
 
     // join multiple request body data, if any
     var dataAscii = [];
     var dataFiles = [];
     var loadData = function (d) {
-        if (!relevant.method)
+        if (!relevant.method) {
             relevant.method = "POST";
+        }
         for (var i = 0; i < d.length; i++) {
-            if (d[i].length > 0 && d[i][0] == "@")
+            if (d[i].length > 0 && d[i][0] == "@") {
                 dataFiles.push(d[i].substr(1));
-            else
+            }
+            else {
                 dataAscii.push(d[i]);
+            }
         }
     };
-    if (cmd.d)
+    if (cmd.d) {
         loadData(cmd.d);
-    if (cmd.data)
+    }
+    if (cmd.data) {
         loadData(cmd.data);
-    if (dataAscii.length > 0)
+    }
+    if (dataAscii.length > 0) {
         relevant.data.ascii = dataAscii.join("&");
-    if (dataFiles.length > 0)
+    }
+    if (dataFiles.length > 0) {
         relevant.data.files = dataFiles;
+    }
 
     // between -u and --user, choose the long form...
     var basicAuthString = "";
-    if (cmd.user && cmd.user.length > 0)
+    if (cmd.user && cmd.user.length > 0) {
         basicAuthString = cmd.user[cmd.user.length - 1];
-    else if (cmd.u && cmd.u.length > 0)
+    } else if (cmd.u && cmd.u.length > 0) {
         basicAuthString = cmd.u[cmd.u.length - 1];
+    }
     var basicAuthSplit = basicAuthString.indexOf(":");
     if (basicAuthSplit > -1) {
         relevant.basicauth = {
@@ -117,13 +127,14 @@ function extractRelevantPieces(cmd) {
     }
 
     // default to GET if nothing else specified
-    if (!relevant.method)
+    if (!relevant.method) {
         relevant.method = "GET";
+    }
 
     return relevant;
 }
 
-function parseCommand(input, options) {
+function parse(input, options) {
     if (typeof options === 'undefined') {
         options = {};
     }
@@ -134,12 +145,14 @@ function parseCommand(input, options) {
 
     // trim leading $ or # that may have been left in
     input = input.trim();
-    if (input.length > 2 && (input[0] == '$' || input[0] == '#') && whitespace(input[1]))
+    if (input.length > 2 && (input[0] == '$' || input[0] == '#') && whitespace(input[1])) {
         input = input.substr(1).trim();
+    }
 
     for (cursor = 0; cursor < input.length; cursor++) {
-        if (whitespace(input[cursor]))
+        if (whitespace(input[cursor])) {
             continue;
+        }
         if (input[cursor] == "-") {
             flagSet();
         } else {
@@ -175,9 +188,9 @@ function parseCommand(input, options) {
     function longFlag() {
         cursor += 2; // skip leading dashes
         var flagName = nextString("=");
-        if (boolFlag(flagName))
+        if (boolFlag(flagName)) {
             result[flagName] = true;
-        else {
+        } else {
             if (typeof result[flagName] == 'undefined') {
                 result[flagName] = [];
             }
@@ -197,8 +210,9 @@ function parseCommand(input, options) {
     function boolFlag(flag) {
         if (Array.isArray(options.boolFlags)) {
             for (var i = 0; i < options.boolFlags.length; i++) {
-                if (options.boolFlags[i] == flag)
+                if (options.boolFlags[i] == flag) {
                     return true;
+                }
             }
         }
         return false;
