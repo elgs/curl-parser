@@ -116,12 +116,17 @@ function extract(cmd) {
     } else if (cmd.u && cmd.u.length > 0) {
         basicAuthString = cmd.u[cmd.u.length - 1];
     }
-    var basicAuthSplit = basicAuthString.indexOf(":");
-    if (basicAuthSplit > -1) {
-        relevant.basicauth = {
-            user: basicAuthString.substr(0, basicAuthSplit),
-            pass: basicAuthString.substr(basicAuthSplit + 1)
-        };
+
+    if (basicAuthString.length > 0) {
+        var basicAuthSplit = basicAuthString.indexOf(":");
+        if (basicAuthSplit > -1) {
+            relevant.basicauth = {
+                user: basicAuthString.substr(0, basicAuthSplit),
+                pass: basicAuthString.substr(basicAuthSplit + 1)
+            };
+        } else {
+            relevant.basicAuth = {user: basicAuthString, pass: "<PASSWORD>"};
+        }
     }
 
     // default to GET if nothing else specified
