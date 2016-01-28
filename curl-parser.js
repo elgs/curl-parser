@@ -122,8 +122,6 @@ function extract(cmd) {
             user: basicAuthString.substr(0, basicAuthSplit),
             pass: basicAuthString.substr(basicAuthSplit + 1)
         };
-    } else {
-        relevant.basicAuth = {user: basicAuthString, pass: "<PASSWORD>"};
     }
 
     // default to GET if nothing else specified
