@@ -1,12 +1,9 @@
-/**
- * Created by elgs on 1/28/16.
- */
-
 (function () {
     'use strict';
-// List of curl flags that are boolean typed; this helps with parsing
-// a command like `curl -abc value` to know whether 'value' belongs to '-c'
-// or is just a positional argument instead.
+
+    // List of curl flags that are boolean typed; this helps with parsing
+    // a command like `curl -abc value` to know whether 'value' belongs to '-c'
+    // or is just a positional argument instead.
     var boolOptions = ['#', 'progress-bar', '-', 'next', '0', 'http1.0', 'http1.1', 'http2',
         'no-npn', 'no-alpn', '1', 'tlsv1', '2', 'sslv2', '3', 'sslv3', '4', 'ipv4', '6', 'ipv6',
         'a', 'append', 'anyauth', 'B', 'use-ascii', 'basic', 'compressed', 'create-dirs',
@@ -38,10 +35,10 @@
         return req;
     };
 
-// extractRelevantPieces returns an object with relevant pieces
-// extracted from cmd, the parsed command. This accounts for
-// multiple flags that do the same thing and return structured
-// data that makes it easy to spit out Go code.
+    // extractRelevantPieces returns an object with relevant pieces
+    // extracted from cmd, the parsed command. This accounts for
+    // multiple flags that do the same thing and return structured
+    // data that makes it easy to spit out Go code.
     var extract_request = function (cmd) {
         var relevant = {
             url: "",
