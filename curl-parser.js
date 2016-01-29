@@ -2,10 +2,10 @@
  * Created by elgs on 1/28/16.
  */
 
-var t = 'curl -u "demo" -X POST -d @file1.txt -d @file2.txt https://example.com/upload';
-
-
-parse_curl(t);
+//var t = 'curl -u "demo" -X POST -d @file1.txt -d @file2.txt https://example.com/upload';
+//
+//
+//parse_curl(t);
 
 
 // List of curl flags that are boolean typed; this helps with parsing
@@ -32,13 +32,14 @@ function parse_curl(curl) {
     if (!curl.trim()) {
         return;
     }
-    var cmd = parse(curl, {boolFlags: boolOptions});
+    var cmd = parse_command(curl, {boolFlags: boolOptions});
     console.log(cmd);
 
-    if (cmd._[0] != "curl")
+    if (cmd._[0] != "curl") {
         throw "Not a curl command";
+    }
 
-    var req = extract(cmd);
+    var req = extract_request(cmd);
     console.log(req);
 }
 
@@ -46,7 +47,7 @@ function parse_curl(curl) {
 // extracted from cmd, the parsed command. This accounts for
 // multiple flags that do the same thing and return structured
 // data that makes it easy to spit out Go code.
-function extract(cmd) {
+function extract_request(cmd) {
     var relevant = {
         url: "",
         method: "",
@@ -90,8 +91,7 @@ function extract(cmd) {
         for (var i = 0; i < d.length; i++) {
             if (d[i].length > 0 && d[i][0] == "@") {
                 dataFiles.push(d[i].substr(1));
-            }
-            else {
+            } else {
                 dataAscii.push(d[i]);
             }
         }
@@ -137,14 +137,14 @@ function extract(cmd) {
     return relevant;
 }
 
-function parse(input, options) {
+function parse_command(input, options) {
     if (typeof options === 'undefined') {
         options = {};
     }
 
     var result = {_: []}, // what we return
         cursor = 0,       // iterator position
-        token = "";       // current token (word or quoted string) being built
+        //token = "";       // current token (word or quoted string) being built
 
     // trim leading $ or # that may have been left in
     input = input.trim();
@@ -179,10 +179,11 @@ function parse(input, options) {
                 result[flagName] = [];
             }
             cursor++; // skip the flag name
-            if (boolFlag(flagName))
+            if (boolFlag(flagName)) {
                 result[flagName] = true;
-            else if (Array.isArray(result[flagName]))
+            } else if (Array.isArray(result[flagName])) {
                 result[flagName].push(nextString());
+            }
         }
     }
 
