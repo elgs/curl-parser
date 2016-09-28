@@ -94,6 +94,9 @@
         if (cmd.data) {
             loadData(cmd.data);
         }
+        if (cmd["data-binary"]) {
+            loadData(cmd["data-binary"]);
+        }
         if (dataAscii.length > 0) {
             relevant.data.ascii = dataAscii.join("&");
         }
